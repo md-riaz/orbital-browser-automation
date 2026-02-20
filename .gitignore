@@ -31,3 +31,7 @@ yarn-error.log
 /worker/node_modules
 /worker/logs
 /storage/queue
+
+# Docker volumes
+/database/*.sqlite-shm
+/database/*.sqlite-wal

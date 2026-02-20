@@ -40,6 +40,9 @@ export default {
     // Database
     dbPath: process.env.DB_PATH || env.DB_DATABASE || path.join(__dirname, '..', 'database', 'database.sqlite'),
 
+    // Redis
+    redisUrl: process.env.REDIS_URL || env.REDIS_URL || 'redis://localhost:6379',
+
     // Storage
     storagePath: process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage', 'app', 'artifacts'),
     queuePath: process.env.QUEUE_PATH || path.join(__dirname, '..', 'storage', 'queue'),

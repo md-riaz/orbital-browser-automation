@@ -1,3 +1,5 @@
+import { Worker } from 'bullmq';
+import Redis from 'ioredis';
 import { chromium } from 'playwright';
 import Database from 'better-sqlite3';
 import fs from 'fs';
@@ -35,15 +37,11 @@ const env = parseEnv();
 const APP_URL = process.env.APP_URL || env.APP_URL || 'http://localhost:3000';
 const DB_PATH = process.env.DB_PATH || env.DB_DATABASE || path.join(__dirname, '..', 'database', 'database.sqlite');
 const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage', 'app', 'artifacts');
-const QUEUE_PATH = process.env.QUEUE_PATH || path.join(__dirname, '..', 'storage', 'queue');
 const LOG_PATH = path.join(__dirname, 'logs');
-const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL) || 1000; // 1 second
-
-const PENDING_PATH = path.join(QUEUE_PATH, 'pending');
-const PROCESSING_PATH = path.join(QUEUE_PATH, 'processing');
+const REDIS_URL = process.env.REDIS_URL || env.REDIS_URL || 'redis://localhost:6379';
 
 // Ensure directories exist
-for (const dir of [STORAGE_PATH, LOG_PATH, QUEUE_PATH, PENDING_PATH, PROCESSING_PATH]) {
+for (const dir of [STORAGE_PATH, LOG_PATH]) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
@@ -283,82 +281,56 @@ class WorkflowExecutor {
     }
 }
 
-// Queue processing
-function dequeue() {
-    const files = fs.readdirSync(PENDING_PATH)
-        .filter(f => f.endsWith('.json'))
-        .sort();
+// Create Redis connection for worker
+const connection = new Redis(REDIS_URL, {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+});
 
-    if (files.length === 0) {
-        return null;
+// Create database connection
+const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+
+// Create BullMQ worker
+const worker = new Worker(
+    'automation-jobs',
+    async (job) => {
+        console.log(`Processing job: ${job.data.id}`);
+
+        const executor = new WorkflowExecutor(job.data.id, db);
+        await executor.execute();
+
+        console.log(`Job ${job.data.id} completed successfully`);
+    },
+    {
+        connection,
+        concurrency: 5, // Process up to 5 jobs concurrently
     }
+);
 
-    const filename = files[0];
-    const jobId = filename.replace('.json', '');
-    const pendingPath = path.join(PENDING_PATH, filename);
-    const processingPath = path.join(PROCESSING_PATH, filename);
+worker.on('completed', (job) => {
+    console.log(`Job ${job.id} has completed`);
+});
 
-    try {
-        const data = fs.readFileSync(pendingPath, 'utf-8');
-        fs.writeFileSync(processingPath, data, 'utf-8');
-        fs.unlinkSync(pendingPath);
+worker.on('failed', (job, err) => {
+    console.error(`Job ${job.id} has failed with error: ${err.message}`);
+});
 
-        return {
-            jobId,
-            data: JSON.parse(data)
-        };
-    } catch (error) {
-        console.error(`Failed to dequeue job ${jobId}:`, error);
-        return null;
-    }
-}
+console.log('Worker started - waiting for jobs...');
 
-function removeFromProcessing(jobId) {
-    const filename = `${jobId}.json`;
-    const filepath = path.join(PROCESSING_PATH, filename);
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, closing worker...');
+    await worker.close();
+    await connection.quit();
+    db.close();
+    process.exit(0);
+});
 
-    if (fs.existsSync(filepath)) {
-        fs.unlinkSync(filepath);
-    }
-}
-
-// Main worker loop
-async function processQueue() {
-    console.log('Worker started - polling queue...');
-
-    const db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-
-    while (true) {
-        try {
-            const job = dequeue();
-
-            if (job) {
-                console.log(`Processing job: ${job.jobId}`);
-
-                const executor = new WorkflowExecutor(job.jobId, db);
-
-                try {
-                    await executor.execute();
-                    console.log(`Job ${job.jobId} completed successfully`);
-                } catch (error) {
-                    console.error(`Job ${job.jobId} failed:`, error.message);
-                } finally {
-                    removeFromProcessing(job.jobId);
-                }
-            } else {
-                // No jobs available, wait before polling again
-                await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
-            }
-        } catch (error) {
-            console.error('Worker error:', error);
-            await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
-        }
-    }
-}
-
-// Start the worker
-processQueue().catch(error => {
-    console.error('Fatal worker error:', error);
-    process.exit(1);
+process.on('SIGINT', async () => {
+    console.log('SIGINT received, closing worker...');
+    await worker.close();
+    await connection.quit();
+    db.close();
+    process.exit(0);
 });
