@@ -25,3 +25,9 @@ yarn-error.log
 /browser-worker/node_modules
 /browser-worker/logs
 /database/database.sqlite
+
+# New architecture files
+/server/node_modules
+/worker/node_modules
+/worker/logs
+/storage/queue
