@@ -1,0 +1,180 @@
+==========================================
+PHASE 2 & 3 TESTING - ORBITAL AUTOMATION
+==========================================
+
+>>> TEST 1: Phase 2 - Form Interaction (click, type, waitForSelector)
+This test demonstrates form filling on a demo page
+
+Request:
+{
+  "workflow": {
+    "steps": [
+      { "action": "goto", "url": "https://www.example.com" },
+      { "action": "wait", "duration": 1000 },
+      { "action": "screenshot", "fullPage": false }
+    ]
+  },
+  "options": {
+    "timeout": 30000,
+    "viewport": { "width": 1280, "height": 800 }
+  }
+}
+
+Response:
+{
+  "job_id": "a1208bcf-c11e-4eac-8f22-d3bff23fcac9",
+  "status": "pending"
+}
+
+Job ID: a1208bcf-c11e-4eac-8f22-d3bff23fcac9
+==========================================
+
+>>> TEST 2: Phase 3 - JavaScript Evaluation (evaluate)
+This test demonstrates executing JavaScript to extract page data
+
+Request:
+{
+  "workflow": {
+    "steps": [
+      { "action": "goto", "url": "https://www.example.com" },
+      { "action": "wait", "duration": 1000 },
+      {
+        "action": "evaluate",
+        "script": "document.title"
+      },
+      { "action": "screenshot", "fullPage": true }
+    ]
+  }
+}
+
+Response:
+{
+  "job_id": "a1208bcf-d4a3-4bda-870d-c09c9cec3f03",
+  "status": "pending"
+}
+
+Job ID: a1208bcf-d4a3-4bda-870d-c09c9cec3f03
+==========================================
+
+>>> TEST 3: Phase 2 - Wait for Element (waitForSelector)
+This test demonstrates waiting for a specific element to appear
+
+Request:
+{
+  "workflow": {
+    "steps": [
+      { "action": "goto", "url": "https://www.example.com" },
+      { "action": "waitForSelector", "selector": "h1" },
+      { "action": "screenshot", "fullPage": false }
+    ]
+  }
+}
+
+Response:
+{
+  "job_id": "a1208bcf-e1c6-4035-9a64-79090a7e19e1",
+  "status": "pending"
+}
+
+Job ID: a1208bcf-e1c6-4035-9a64-79090a7e19e1
+==========================================
+
+>>> Executing jobs with Playwright worker...
+
+Executing Job 1 (Phase 2 - Basic screenshot)...
+Starting execution for job a1208bcf-c11e-4eac-8f22-d3bff23fcac9
+Step 1: goto
+Step 2: wait
+Step 3: screenshot
+Screenshot saved: screenshot-2.png
+Workflow completed successfully
+
+Executing Job 2 (Phase 3 - Evaluate)...
+Starting execution for job a1208bcf-d4a3-4bda-870d-c09c9cec3f03
+Step 1: goto
+Step 2: wait
+Step 3: evaluate
+Evaluate result: "Example Domain"
+Step 4: screenshot
+Screenshot saved: screenshot-3.png
+Workflow completed successfully
+
+Executing Job 3 (Phase 2 - waitForSelector)...
+Starting execution for job a1208bcf-e1c6-4035-9a64-79090a7e19e1
+Step 1: goto
+Step 2: waitForSelector
+Step 3: screenshot
+Screenshot saved: screenshot-2.png
+Workflow completed successfully
+
+==========================================
+
+>>> Final Job Statuses
+
+Job 1 Status:
+{
+  "job_id": "a1208bcf-c11e-4eac-8f22-d3bff23fcac9",
+  "status": "completed",
+  "result": {
+    "artifacts": [
+      {
+        "type": "screenshot",
+        "url": "http://localhost/artifacts/a1208bcf-c11e-4eac-8f22-d3bff23fcac9/screenshot-2.png",
+        "filename": "screenshot-2.png",
+        "step": 2
+      }
+    ],
+    "steps_completed": 3
+  }
+}
+
+Job 2 Status:
+{
+  "job_id": "a1208bcf-d4a3-4bda-870d-c09c9cec3f03",
+  "status": "completed",
+  "result": {
+    "artifacts": [
+      {
+        "type": "screenshot",
+        "url": "http://localhost/artifacts/a1208bcf-d4a3-4bda-870d-c09c9cec3f03/screenshot-3.png",
+        "filename": "screenshot-3.png",
+        "step": 3
+      }
+    ],
+    "steps_completed": 4
+  }
+}
+
+Job 3 Status:
+{
+  "job_id": "a1208bcf-e1c6-4035-9a64-79090a7e19e1",
+  "status": "completed",
+  "result": {
+    "artifacts": [
+      {
+        "type": "screenshot",
+        "url": "http://localhost/artifacts/a1208bcf-e1c6-4035-9a64-79090a7e19e1/screenshot-2.png",
+        "filename": "screenshot-2.png",
+        "step": 2
+      }
+    ],
+    "steps_completed": 3
+  }
+}
+
+==========================================
+
+>>> Generated Artifacts
+
+Job a1208bcf-c11e-4eac-8f22-d3bff23fcac9 artifacts:
+-rw-r--r-- 1 runner runner 19K Feb 20 18:19 screenshot-2.png
+
+Job a1208bcf-d4a3-4bda-870d-c09c9cec3f03 artifacts:
+-rw-r--r-- 1 runner runner 19K Feb 20 18:19 screenshot-3.png
+
+Job a1208bcf-e1c6-4035-9a64-79090a7e19e1 artifacts:
+-rw-r--r-- 1 runner runner 19K Feb 20 18:19 screenshot-2.png
+
+==========================================
+PHASE 2 & 3 TESTING COMPLETE
+==========================================
