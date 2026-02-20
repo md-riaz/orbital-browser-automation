@@ -1,0 +1,124 @@
+===== ORBITAL BROWSER AUTOMATION - COMPLETE TEST SUITE =====
+
+>>> Test 1: Creating a successful job (goto + screenshot)
+Request:
+{
+  "workflow": {
+    "steps": [
+      { "action": "goto", "url": "https://www.example.com" },
+      { "action": "wait", "duration": 1000 },
+      { "action": "screenshot", "fullPage": true }
+    ]
+  },
+  "options": {
+    "timeout": 30000,
+    "viewport": { "width": 1280, "height": 800 }
+  }
+}
+
+Response:
+{
+  "job_id": "a1206d8c-7e3d-4e2d-93fe-174285ecb3df",
+  "status": "pending"
+}
+
+Job ID: a1206d8c-7e3d-4e2d-93fe-174285ecb3df
+==========================================
+
+>>> Test 2: Testing validation - Invalid action
+Request:
+{ "workflow": { "steps": [{ "action": "invalid_action" }] } }
+
+Response:
+{
+  "error": "Validation failed",
+  "details": {
+    "workflow.steps.0.action": [
+      "The selected workflow.steps.0.action is invalid."
+    ]
+  }
+}
+==========================================
+
+>>> Test 3: Testing SSRF Protection - Localhost URL
+Request:
+{ "workflow": { "steps": [{ "action": "goto", "url": "http://localhost:8000" }] } }
+
+Response:
+{
+  "error": "Step 0: Hostname resolves to internal/private IP address"
+}
+==========================================
+
+>>> Test 4: Testing max steps (26 steps - should fail)
+Request: (26 wait steps)
+
+Response:
+{
+  "error": "Validation failed",
+  "details": {
+    "workflow.steps": [
+      "The workflow.steps field must not have more than 25 items."
+    ]
+  }
+}
+==========================================
+
+>>> Executing job with Playwright worker
+Running: node browser-worker/worker.js a1206d8c-7e3d-4e2d-93fe-174285ecb3df
+
+Starting execution for job a1206d8c-7e3d-4e2d-93fe-174285ecb3df
+Retrieved job: {"workflow":{"steps":[{"action":"goto","url":"https://www.example.com"},{"action":"wait","duration":1000},{"action":"screenshot","fullPage":true}]},"options":{"timeout":30000,"viewport":{"width":1280,"height":800}}}
+Launching Chromium...
+Executing 3 steps...
+Step 1: goto
+Step 2: wait
+Step 3: screenshot
+Screenshot saved: screenshot-2.png
+Workflow completed successfully
+Browser closed
+
+==========================================
+
+>>> Checking final job status
+GET /api/v1/jobs/a1206d8c-7e3d-4e2d-93fe-174285ecb3df
+
+Response:
+{
+  "job_id": "a1206d8c-7e3d-4e2d-93fe-174285ecb3df",
+  "status": "completed",
+  "created_at": "2026-02-20T16:54:49+00:00",
+  "result": {
+    "artifacts": [
+      {
+        "type": "screenshot",
+        "url": "http://localhost/artifacts/a1206d8c-7e3d-4e2d-93fe-174285ecb3df/screenshot-2.png",
+        "filename": "screenshot-2.png",
+        "step": 2
+      }
+    ],
+    "steps_completed": 3
+  },
+  "finished_at": "2026-02-20T16:54:51+00:00"
+}
+
+==========================================
+
+>>> Checking generated artifact
+Artifact directory exists: storage/app/artifacts/a1206d8c-7e3d-4e2d-93fe-174285ecb3df/
+total 20K
+-rw-r--r-- 1 runner runner 19K Feb 20 16:54 screenshot-2.png
+
+File: screenshot-2.png
+storage/app/artifacts/a1206d8c-7e3d-4e2d-93fe-174285ecb3df/screenshot-2.png: PNG image data, 1280 x 800, 8-bit/color RGB, non-interlaced
+
+==========================================
+>>> Database verification
+Checking automation_jobs table:
+a1206d8c-7e3d-4e2d-93fe-174285ecb3df|completed|2026-02-20 16:54:49
+a1206d48-3dec-4cab-bdd7-ff4faee22ec6|pending|2026-02-20 16:54:04
+a1206d48-699c-4a42-b910-f29a7bcf3aae|completed|2026-02-20 16:54:04
+
+==========================================
+
+===== TEST SUITE COMPLETE =====
