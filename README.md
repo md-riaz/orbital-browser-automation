@@ -205,6 +205,8 @@ See `docs/DEPLOYMENT.md` for detailed deployment instructions including:
 
 ## Testing
 
+### Quick Test
+
 Example workflow test:
 
 ```bash
@@ -218,6 +220,120 @@ curl -X POST http://localhost:8000/api/v1/jobs \
       ]
     }
   }'
+```
+
+### Complete Test Results
+
+The project has been tested with SQLite database and all features are working correctly. See `docs/TEST_RESULTS.txt` for complete test output.
+
+#### Test Cases Verified
+
+✅ **Job Creation**: Successfully creates jobs with valid workflows
+✅ **Workflow Execution**: Playwright worker executes steps and generates artifacts
+✅ **Security Validation**: SSRF protection blocks internal/private IPs
+✅ **Input Validation**: Rejects invalid actions and enforces limits
+✅ **Artifact Storage**: Screenshots saved to `storage/app/artifacts/{job_id}/`
+✅ **Database Queue**: Jobs stored and updated in SQLite database
+
+#### Sample Test Output
+
+**1. Create Job - Request:**
+```json
+{
+  "workflow": {
+    "steps": [
+      { "action": "goto", "url": "https://www.example.com" },
+      { "action": "wait", "duration": 1000 },
+      { "action": "screenshot", "fullPage": true }
+    ]
+  },
+  "options": {
+    "timeout": 30000,
+    "viewport": { "width": 1280, "height": 800 }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "job_id": "a1206d8c-7e3d-4e2d-93fe-174285ecb3df",
+  "status": "pending"
+}
+```
+
+**2. Get Job Status - Response:**
+```json
+{
+  "job_id": "a1206d8c-7e3d-4e2d-93fe-174285ecb3df",
+  "status": "completed",
+  "created_at": "2026-02-20T16:54:49+00:00",
+  "result": {
+    "artifacts": [
+      {
+        "type": "screenshot",
+        "url": "http://localhost/artifacts/a1206d8c-7e3d-4e2d-93fe-174285ecb3df/screenshot-2.png",
+        "filename": "screenshot-2.png",
+        "step": 2
+      }
+    ],
+    "steps_completed": 3
+  },
+  "finished_at": "2026-02-20T16:54:51+00:00"
+}
+```
+
+**3. Generated Screenshot:**
+
+![Example Screenshot](docs/screenshots/example-screenshot.png)
+
+*Screenshot of https://www.example.com taken by Orbital (1280x800px, PNG format)*
+
+#### Security Test Results
+
+**SSRF Protection:**
+```json
+// Request with localhost URL
+{ "workflow": { "steps": [{ "action": "goto", "url": "http://localhost:8000" }] } }
+
+// Response - Blocked
+{ "error": "Step 0: Hostname resolves to internal/private IP address" }
+```
+
+**Input Validation:**
+```json
+// Request with 26 steps (exceeds limit)
+// Response - Blocked
+{
+  "error": "Validation failed",
+  "details": {
+    "workflow.steps": ["The workflow.steps field must not have more than 25 items."]
+  }
+}
+```
+
+**Invalid Action:**
+```json
+// Request with invalid action
+{ "workflow": { "steps": [{ "action": "invalid_action" }] } }
+
+// Response - Blocked
+{
+  "error": "Validation failed",
+  "details": {
+    "workflow.steps.0.action": ["The selected workflow.steps.0.action is invalid."]
+  }
+}
+```
+
+### Database Verification
+
+SQLite database successfully stores all job data:
+```
+id                                  | status    | created_at
+------------------------------------|-----------|-------------------
+a1206d8c-7e3d-4e2d-93fe-174285ecb3df| completed | 2026-02-20 16:54:49
+a1206d48-699c-4a42-b910-f29a7bcf3aae| completed | 2026-02-20 16:54:04
 ```
 
 ## License

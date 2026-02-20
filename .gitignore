@@ -24,3 +24,4 @@ yarn-error.log
 /.zed
 /browser-worker/node_modules
 /browser-worker/logs
+/database/database.sqlite
