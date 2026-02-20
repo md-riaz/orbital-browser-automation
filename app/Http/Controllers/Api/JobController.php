@@ -33,8 +33,8 @@ class JobController extends Controller
             'options' => 'sometimes|array',
             'options.timeout' => 'sometimes|integer|min:1000|max:120000',
             'options.viewport' => 'sometimes|array',
-            'options.viewport.width' => 'sometimes|integer|min:100|max:3840',
-            'options.viewport.height' => 'sometimes|integer|min:100|max:2160',
+            'options.viewport.width' => 'required_with:options.viewport|integer|min:100|max:3840',
+            'options.viewport.height' => 'required_with:options.viewport|integer|min:100|max:2160',
         ]);
 
         if ($validator->fails()) {

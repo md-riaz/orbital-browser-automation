@@ -13,16 +13,16 @@ Route::get('/artifacts/{job}/{file}', function (string $job, string $file) {
         abort(404);
     }
 
-    // Validate file is alphanumeric with extension
-    if (!preg_match('/^[a-zA-Z0-9_-]+\.(png|jpg|jpeg|pdf|txt|json)$/i', $file)) {
+    // Validate file is alphanumeric with extension, allowing multi-dot filenames and common download formats
+    if (!preg_match('/^[a-zA-Z0-9_.-]+\.(png|jpg|jpeg|pdf|txt|json|csv|zip|xlsx|xls|docx|doc)$/i', $file)) {
         abort(404);
     }
 
-    $path = "artifacts/{$job}/{$file}";
+    $path = "{$job}/{$file}";
 
-    if (!Storage::exists($path)) {
+    if (!Storage::disk('artifacts')->exists($path)) {
         abort(404);
     }
 
-    return Storage::download($path);
+    return Storage::disk('artifacts')->download($path);
 })->name('artifacts.show');
