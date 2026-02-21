@@ -1,0 +1,61 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: orbital-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      target: server
+    container_name: orbital-server
+    ports:
+      - "${PORT:-8092}:8092"
+    environment:
+      - PORT=8092
+      - HOST=0.0.0.0
+      - APP_URL=${APP_URL:-http://localhost:8092}
+      - REDIS_URL=redis://redis:6379
+      - DB_DATABASE=/app/database/database.sqlite
+      - API_KEYS=${API_KEYS:-your-secret-api-key-change-me}
+      - STORAGE_PATH=/app/storage/app/artifacts
+    volumes:
+      - ./database:/app/database
+      - ./storage/app/artifacts:/app/storage/app/artifacts
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      target: worker
+    environment:
+      - APP_URL=${APP_URL:-http://localhost:8092}
+      - REDIS_URL=redis://redis:6379
+      - DB_DATABASE=/app/database/database.sqlite
+      - STORAGE_PATH=/app/storage/app/artifacts
+    volumes:
+      - ./database:/app/database
+      - ./storage/app/artifacts:/app/storage/app/artifacts
+      - ./worker/logs:/app/worker/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      server:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      replicas: ${WORKER_REPLICAS:-2}
+
+volumes:
+  redis-data:

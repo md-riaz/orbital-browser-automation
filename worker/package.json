@@ -1,0 +1,19 @@
+{
+  "name": "orbital-worker",
+  "version": "1.0.0",
+  "description": "Queue worker for Orbital Browser Automation",
+  "main": "worker.js",
+  "type": "module",
+  "scripts": {
+    "start": "node worker.js"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0",
+    "better-sqlite3": "^11.0.0",
+    "bullmq": "^5.34.0",
+    "ioredis": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
