@@ -28,14 +28,14 @@
 The Docker setup includes:
 
 - **Redis**: Message queue backend (port 6379)
-- **Server**: Fastify API server (port 3000)
+- **Server**: Fastify API server (port 8092)
 - **Worker**: Playwright automation workers (2 replicas by default)
 
 ## Port Configuration
 
 By default, the following ports are exposed:
 
-- API Server: `3000` (configurable via `PORT` env var)
+- API Server: `8092` (configurable via `PORT` env var)
 - Redis: `6379` (configurable via `REDIS_PORT` env var)
 
 To use different ports, set them in your `.env` file:
@@ -86,7 +86,7 @@ The following directories are mounted as volumes:
        server_name your-domain.com;
 
        location / {
-           proxy_pass http://localhost:3000;
+           proxy_pass http://localhost:8092;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
        }

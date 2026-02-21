@@ -172,7 +172,7 @@ Desktop (HD):
 If a workflow fails, check the error message in the job response:
 
 ```bash
-curl http://localhost:8000/api/v1/jobs/{job_id}
+curl http://localhost:8092/api/v1/jobs/{job_id}
 ```
 
 Common errors:
