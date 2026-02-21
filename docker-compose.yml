@@ -20,11 +20,11 @@ services:
       target: server
     container_name: orbital-server
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-8092}:8092"
     environment:
-      - PORT=3000
+      - PORT=8092
       - HOST=0.0.0.0
-      - APP_URL=${APP_URL:-http://localhost:3000}
+      - APP_URL=${APP_URL:-http://localhost:8092}
       - REDIS_URL=redis://redis:6379
       - DB_DATABASE=/app/database/database.sqlite
       - API_KEYS=${API_KEYS:-your-secret-api-key-change-me}
@@ -43,7 +43,7 @@ services:
       target: worker
     container_name: orbital-worker
     environment:
-      - APP_URL=${APP_URL:-http://localhost:3000}
+      - APP_URL=${APP_URL:-http://localhost:8092}
       - REDIS_URL=redis://redis:6379
       - DB_DATABASE=/app/database/database.sqlite
       - STORAGE_PATH=/app/storage/app/artifacts

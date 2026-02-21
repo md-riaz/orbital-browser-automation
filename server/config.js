@@ -33,9 +33,9 @@ const env = parseEnv();
 
 export default {
     // Server
-    port: parseInt(process.env.PORT || env.PORT || '3000'),
+    port: parseInt(process.env.PORT || env.PORT || '8092'),
     host: process.env.HOST || env.HOST || '0.0.0.0',
-    appUrl: process.env.APP_URL || env.APP_URL || 'http://localhost:3000',
+    appUrl: process.env.APP_URL || env.APP_URL || 'http://localhost:8092',
 
     // Database
     dbPath: process.env.DB_PATH || env.DB_DATABASE || path.join(__dirname, '..', 'database', 'database.sqlite'),
@@ -45,7 +45,6 @@ export default {
 
     // Storage
     storagePath: process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage', 'app', 'artifacts'),
-    queuePath: process.env.QUEUE_PATH || path.join(__dirname, '..', 'storage', 'queue'),
 
     // Security
     apiKeys: (process.env.API_KEYS || env.API_KEYS || 'default-key-change-me').split(',').map(k => k.trim()),

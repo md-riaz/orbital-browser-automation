@@ -34,7 +34,7 @@ function parseEnv() {
 
 const env = parseEnv();
 
-const APP_URL = process.env.APP_URL || env.APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.APP_URL || env.APP_URL || 'http://localhost:8092';
 const DB_PATH = process.env.DB_PATH || env.DB_DATABASE || path.join(__dirname, '..', 'database', 'database.sqlite');
 const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage', 'app', 'artifacts');
 const LOG_PATH = path.join(__dirname, 'logs');

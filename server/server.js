@@ -7,7 +7,6 @@ import config from './config.js';
 import { createJob, getJob } from './database.js';
 import { enqueue } from './queue.js';
 import { validateUrl, validateStep } from './validation.js';
-import { workflowTemplates, interpolateTemplate } from './workflows.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -192,69 +191,6 @@ fastify.get('/api/v1/jobs/:id', async (request, reply) => {
     }
 
     return response;
-});
-
-// Get workflow templates
-fastify.get('/api/v1/templates', async () => {
-    const templates = Object.entries(workflowTemplates).map(([id, template]) => ({
-        id,
-        name: template.name,
-        description: template.description,
-        parameters: template.parameters
-    }));
-
-    return { templates };
-});
-
-// Get specific template
-fastify.get('/api/v1/templates/:id', async (request, reply) => {
-    const { id } = request.params;
-    const template = workflowTemplates[id];
-
-    if (!template) {
-        return reply.code(404).send({ error: 'Template not found' });
-    }
-
-    return { id, ...template };
-});
-
-// Create job from template
-fastify.post('/api/v1/templates/:id/jobs', async (request, reply) => {
-    const { id } = request.params;
-    const template = workflowTemplates[id];
-
-    if (!template) {
-        return reply.code(404).send({ error: 'Template not found' });
-    }
-
-    const params = request.body.parameters || {};
-
-    // Validate required parameters
-    for (const [paramName, paramDef] of Object.entries(template.parameters)) {
-        if (paramDef.required && !params[paramName]) {
-            return reply.code(422).send({
-                error: 'Validation failed',
-                details: { [paramName]: [`${paramName} is required`] }
-            });
-        }
-    }
-
-    // Interpolate template
-    const workflow = interpolateTemplate(template.workflow, params);
-    const options = template.options;
-
-    // Create job
-    const jobId = uuidv4();
-    const job = createJob(jobId, { workflow, options });
-
-    // Enqueue job
-    await enqueue(jobId, { id: jobId, workflow: { workflow, options } });
-
-    return reply.code(201).send({
-        job_id: job.id,
-        status: job.status,
-        template_used: id
-    });
 });
 
 // Start server

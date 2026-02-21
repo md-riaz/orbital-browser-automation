@@ -9,7 +9,6 @@ Orbital is a **minimal**, **production-ready** Headless Browser Automation Servi
 - 🔒 **Built-in security** (SSRF protection, input validation, API key auth)
 - 💾 **Simple persistence**: SQLite for job tracking, Redis for queue
 - 📦 **Docker-ready**: One-command deployment with docker-compose
-- 🔧 **Workflow Templates**: Pre-built templates for common use cases
 - ⚡ **Fast and scalable**: Concurrent job processing, horizontal scaling
 - 🌐 **Unique port configuration**: Deploy multiple instances easily
 
@@ -28,7 +27,6 @@ Client → Fastify API → Redis (BullMQ) → Node.js Playwright Workers → Art
    - API key authentication
    - Request validation and SSRF protection
    - Job creation and status endpoints
-   - Workflow template management
    - Artifact serving
 
 2. **Worker** (`worker/`)
@@ -69,10 +67,10 @@ cp .env.docker .env
 docker-compose up -d
 
 # 4. Test the API
-curl http://localhost:3000/health
+curl http://localhost:8092/health
 ```
 
-That's it! The API is running on port 3000.
+That's it! The API is running on port 8092.
 
 See [docs/DOCKER.md](docs/DOCKER.md) for detailed Docker documentation.
 
@@ -129,8 +127,8 @@ Key environment variables in `.env`:
 
 ```env
 # API Server
-APP_URL=http://localhost:3000
-PORT=3000
+APP_URL=http://localhost:8092
+PORT=8092
 HOST=0.0.0.0
 
 # Redis (Queue)
@@ -157,80 +155,12 @@ curl -H "X-API-Key: your-secret-key" ...
 curl -H "Authorization: Bearer your-secret-key" ...
 ```
 
-### Workflow Templates
-
-#### List Available Templates
-
-**GET** `/api/v1/templates`
-
-```bash
-curl http://localhost:3000/api/v1/templates \
-  -H "X-API-Key: your-secret-key"
-```
-
-**Response:**
-```json
-{
-  "templates": [
-    {
-      "id": "screenshot",
-      "name": "Take Screenshot",
-      "description": "Navigate to a URL and take a screenshot",
-      "parameters": {
-        "url": { "type": "string", "required": true, "description": "URL to visit" }
-      }
-    },
-    {
-      "id": "form-fill",
-      "name": "Fill Form",
-      "description": "Navigate to a form and fill it with data",
-      "parameters": { ... }
-    }
-  ]
-}
-```
-
-#### Available Templates
-
-1. **screenshot** - Take a screenshot of any webpage
-2. **pdf-export** - Export webpage to PDF
-3. **form-fill** - Automated form filling
-4. **monitor-changes** - Monitor page changes
-5. **scrape-data** - Extract data from webpages
-6. **login-flow** - Automated login workflow
-
-#### Create Job from Template
-
-**POST** `/api/v1/templates/:id/jobs`
-
-```bash
-curl -X POST http://localhost:3000/api/v1/templates/screenshot/jobs \
-  -H "X-API-Key: your-secret-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "parameters": {
-      "url": "https://example.com"
-    }
-  }'
-```
-
-**Response:**
-```json
-{
-  "job_id": "uuid",
-  "status": "pending",
-  "template_used": "screenshot"
-}
-```
-
-### Custom Workflows
-
-#### Create Job
+### Create Job
 
 **POST** `/api/v1/jobs`
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/jobs \
+curl -X POST http://localhost:8092/api/v1/jobs \
   -H "X-API-Key: your-secret-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -253,7 +183,7 @@ curl -X POST http://localhost:3000/api/v1/jobs \
 **GET** `/api/v1/jobs/:id`
 
 ```bash
-curl http://localhost:3000/api/v1/jobs/{job_id} \
+curl http://localhost:8092/api/v1/jobs/{job_id} \
   -H "X-API-Key: your-secret-key"
 ```
 
@@ -269,7 +199,7 @@ curl http://localhost:3000/api/v1/jobs/{job_id} \
     "artifacts": [
       {
         "type": "screenshot",
-        "url": "http://localhost:3000/artifacts/{job_id}/screenshot-0.png",
+        "url": "http://localhost:8092/artifacts/{job_id}/screenshot-0.png",
         "filename": "screenshot-0.png",
         "step": 0
       }
@@ -332,7 +262,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:8092;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -400,30 +330,38 @@ docker exec -it orbital-redis redis-cli
 
 ## Example Use Cases
 
-### 1. Screenshot Service
+### 1. Take a Screenshot
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/templates/screenshot/jobs \
-  -H "X-API-Key: your-key" \
-  -H "Content-Type: application/json" \
-  -d '{"parameters": {"url": "https://github.com"}}'
-```
-
-### 2. Automated Form Testing
-
-```bash
-curl -X POST http://localhost:3000/api/v1/templates/form-fill/jobs \
+curl -X POST http://localhost:8092/api/v1/jobs \
   -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "parameters": {
-      "url": "https://example.com/form",
-      "form_selector": "form#contact",
-      "field1_selector": "input[name=email]",
-      "field1_value": "test@example.com",
-      "field2_selector": "input[name=name]",
-      "field2_value": "John Doe",
-      "submit_selector": "button[type=submit]"
+    "workflow": {
+      "steps": [
+        { "action": "goto", "url": "https://github.com" },
+        { "action": "screenshot", "fullPage": true }
+      ]
+    }
+  }'
+```
+
+### 2. Automated Form Filling
+
+```bash
+curl -X POST http://localhost:8092/api/v1/jobs \
+  -H "X-API-Key: your-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow": {
+      "steps": [
+        { "action": "goto", "url": "https://example.com/form" },
+        { "action": "type", "selector": "input[name=email]", "value": "test@example.com" },
+        { "action": "type", "selector": "input[name=name]", "value": "John Doe" },
+        { "action": "click", "selector": "button[type=submit]" },
+        { "action": "waitForSelector", "selector": ".success-message" },
+        { "action": "screenshot" }
+      ]
     }
   }'
 ```
@@ -431,13 +369,19 @@ curl -X POST http://localhost:3000/api/v1/templates/form-fill/jobs \
 ### 3. Web Scraping
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/templates/scrape-data/jobs \
+curl -X POST http://localhost:8092/api/v1/jobs \
   -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "parameters": {
-      "url": "https://news.ycombinator.com",
-      "data_selector": ".titleline > a"
+    "workflow": {
+      "steps": [
+        { "action": "goto", "url": "https://news.ycombinator.com" },
+        { "action": "waitForSelector", "selector": ".titleline" },
+        {
+          "action": "evaluate",
+          "script": "Array.from(document.querySelectorAll(\".titleline > a\")).map(a => ({ title: a.textContent, url: a.href }))"
+        }
+      ]
     }
   }'
 ```
@@ -447,11 +391,11 @@ curl -X POST http://localhost:3000/api/v1/templates/scrape-data/jobs \
 **Improvements:**
 - ✅ **Redis Queue**: Replaced filesystem queue with BullMQ for reliability
 - ✅ **Docker Ready**: Full Docker support with docker-compose
-- ✅ **Workflow Templates**: Pre-built templates for common use cases
 - ✅ **Better Scaling**: Multiple workers, concurrent processing
-- ✅ **Configurable Ports**: Easy deployment on different ports
+- ✅ **Configurable Ports**: Easy deployment on different ports (default: 8092)
 - ✅ **Job Retry**: Automatic retry with exponential backoff
 - ✅ **Better Monitoring**: Queue statistics and job tracking
+- ✅ **JSON Workflows**: Flexible, dynamic action sequences
 
 ## License
 
