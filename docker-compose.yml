@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
@@ -41,7 +39,6 @@ services:
     build:
       context: .
       target: worker
-    container_name: orbital-worker
     environment:
       - APP_URL=${APP_URL:-http://localhost:8092}
       - REDIS_URL=redis://redis:6379

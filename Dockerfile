@@ -18,10 +18,23 @@ RUN cd worker && npm ci --only=production
 # Production stage for server
 FROM node:20-alpine AS server
 
+# Install runtime dependencies for better-sqlite3
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
 
-# Copy dependencies and code
-COPY --from=base /app/server/node_modules ./server/node_modules
+# Copy package files
+COPY server/package*.json ./server/
+
+# Install dependencies (this will download pre-built binaries)
+RUN cd server && npm ci --only=production
+
+# Remove pre-built binaries and rebuild from source for Alpine
+RUN cd server && \
+    rm -rf node_modules/better-sqlite3/build && \
+    npm rebuild better-sqlite3
+
+# Copy code
 COPY server ./server
 COPY .env.example ./.env
 
@@ -39,21 +52,34 @@ FROM node:20-alpine AS worker
 
 WORKDIR /app
 
-# Install Playwright dependencies
+# Install Playwright dependencies and build tools for better-sqlite3
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    python3 \
+    make \
+    g++
 
 # Set Playwright environment variables
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Copy dependencies and code
-COPY --from=base /app/worker/node_modules ./worker/node_modules
+# Copy package files
+COPY worker/package*.json ./worker/
+
+# Install dependencies
+RUN cd worker && npm ci --only=production
+
+# Remove pre-built binaries and rebuild from source for Alpine
+RUN cd worker && \
+    rm -rf node_modules/better-sqlite3/build && \
+    npm rebuild better-sqlite3
+
+# Copy code
 COPY worker ./worker
 COPY .env.example ./.env
 

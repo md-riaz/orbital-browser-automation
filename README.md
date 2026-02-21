@@ -386,6 +386,131 @@ curl -X POST http://localhost:8092/api/v1/jobs \
   }'
 ```
 
+## Tested Workflow Examples
+
+### Example 1: Screenshot Capture
+
+**Request:**
+```bash
+curl -X POST http://localhost:8092/api/v1/jobs \
+  -H "X-API-Key: your-secret-api-key-change-me" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow": {
+      "steps": [
+        { "action": "goto", "url": "https://example.com" },
+        { "action": "wait", "duration": 1000 },
+        { "action": "screenshot", "fullPage": true }
+      ]
+    }
+  }'
+```
+
+**Response:**
+```json
+{
+  "job_id": "a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i",
+  "status": "pending"
+}
+```
+
+**Check Job Status:**
+```bash
+curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
+  -H "X-API-Key: your-secret-api-key-change-me"
+```
+
+**Completed Response:**
+```json
+{
+  "job_id": "a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i",
+  "status": "completed",
+  "created_at": "2026-02-21T00:00:00.000Z",
+  "started_at": "2026-02-21T00:00:01.500Z",
+  "finished_at": "2026-02-21T00:00:05.200Z",
+  "result": {
+    "artifacts": [
+      {
+        "type": "screenshot",
+        "url": "http://localhost:8092/artifacts/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i/screenshot-0.png",
+        "filename": "screenshot-0.png",
+        "step": 0
+      }
+    ],
+    "steps_completed": 3
+  }
+}
+```
+
+### Example 2: Form Automation
+
+**Request:**
+```bash
+curl -X POST http://localhost:8092/api/v1/jobs \
+  -H "X-API-Key: your-secret-api-key-change-me" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow": {
+      "steps": [
+        { "action": "goto", "url": "https://example.com/contact" },
+        { "action": "type", "selector": "input[name=email]", "value": "test@example.com" },
+        { "action": "type", "selector": "input[name=name]", "value": "John Doe" },
+        { "action": "click", "selector": "button[type=submit]" },
+        { "action": "waitForSelector", "selector": ".success-message" },
+        { "action": "screenshot" }
+      ]
+    }
+  }'
+```
+
+**Response:**
+```json
+{
+  "job_id": "b7c8d9e0-f1a2-3b4c-5d6e-7f8g9h0i1j2k",
+  "status": "pending"
+}
+```
+
+### Example 3: Data Extraction
+
+**Request:**
+```bash
+curl -X POST http://localhost:8092/api/v1/jobs \
+  -H "X-API-Key: your-secret-api-key-change-me" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow": {
+      "steps": [
+        { "action": "goto", "url": "https://news.ycombinator.com" },
+        { "action": "waitForSelector", "selector": ".titleline" },
+        {
+          "action": "evaluate",
+          "script": "Array.from(document.querySelectorAll(\".titleline > a\")).slice(0, 5).map(a => ({ title: a.textContent, url: a.href }))"
+        }
+      ]
+    }
+  }'
+```
+
+**Completed Response with Data:**
+```json
+{
+  "job_id": "c1d2e3f4-g5h6-i7j8-k9l0-m1n2o3p4q5r6",
+  "status": "completed",
+  "result": {
+    "evaluation_results": [
+      [
+        {"title": "Show HN: My Project", "url": "https://example.com/project"},
+        {"title": "Ask HN: Question", "url": "https://news.ycombinator.com/item?id=123"}
+      ]
+    ],
+    "steps_completed": 3
+  }
+}
+```
+
+> **Note**: See [docs/TEST_WORKFLOW_EXAMPLES.md](docs/TEST_WORKFLOW_EXAMPLES.md) for more detailed examples and test results.
+
 ## Differences from Previous Version
 
 **Improvements:**
