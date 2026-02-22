@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { execSync } from 'child_process';
+
 // Skip Chromium installation if running in Docker or CI environment
 if (process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD === '1') {
   console.log('Skipping Chromium installation (PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1)');
@@ -8,7 +10,6 @@ if (process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD === '1') {
 
 // Install Chromium browser binaries
 console.log('Installing Chromium browser binaries...');
-const { execSync } = require('child_process');
 
 try {
   execSync('npx playwright install chromium', { stdio: 'inherit' });
