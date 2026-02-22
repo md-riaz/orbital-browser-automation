@@ -330,7 +330,7 @@ npm install
 # The postinstall script will automatically install Chromium
 ```
 
-**For Docker deployments:** This issue should not occur as the Dockerfile is configured to use the system's Chromium package.
+**For Docker deployments:** Simply run `docker-compose up` - no additional commands needed. The Dockerfile automatically uses the system's Chromium package and skips browser downloads.
 
 ### Redis Connection Issues
 
