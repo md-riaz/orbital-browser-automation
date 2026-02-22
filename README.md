@@ -67,10 +67,10 @@ cp .env.docker .env
 docker-compose up -d
 
 # 4. Test the API
-curl http://localhost:8092/health
+curl http://localhost:8058/health
 ```
 
-That's it! The API is running on port 8092.
+That's it! The API is running on port 8058.
 
 See [docs/DOCKER.md](docs/DOCKER.md) for detailed Docker documentation.
 
@@ -127,8 +127,8 @@ Key environment variables in `.env`:
 
 ```env
 # API Server
-APP_URL=http://localhost:8092
-PORT=8092
+APP_URL=http://localhost:8058
+PORT=8058
 HOST=0.0.0.0
 
 # Redis (Queue)
@@ -160,7 +160,7 @@ curl -H "Authorization: Bearer your-secret-key" ...
 **POST** `/api/v1/jobs`
 
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -183,7 +183,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 **GET** `/api/v1/jobs/:id`
 
 ```bash
-curl http://localhost:8092/api/v1/jobs/{job_id} \
+curl http://localhost:8058/api/v1/jobs/{job_id} \
   -H "X-API-Key: your-secret-key"
 ```
 
@@ -199,7 +199,7 @@ curl http://localhost:8092/api/v1/jobs/{job_id} \
     "artifacts": [
       {
         "type": "screenshot",
-        "url": "http://localhost:8092/artifacts/{job_id}/screenshot-0.png",
+        "url": "http://localhost:8058/artifacts/{job_id}/screenshot-0.png",
         "filename": "screenshot-0.png",
         "step": 0
       }
@@ -262,7 +262,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://localhost:8092;
+        proxy_pass http://localhost:8058;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -333,7 +333,7 @@ docker exec -it orbital-redis redis-cli
 ### 1. Take a Screenshot
 
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -349,7 +349,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 ### 2. Automated Form Filling
 
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -369,7 +369,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 ### 3. Web Scraping
 
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -392,7 +392,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -416,7 +416,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Check Job Status:**
 ```bash
-curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
+curl http://localhost:8058/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
   -H "X-API-Key: your-secret-api-key-change-me"
 ```
 
@@ -432,7 +432,7 @@ curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
     "artifacts": [
       {
         "type": "screenshot",
-        "url": "http://localhost:8092/artifacts/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i/screenshot-0.png",
+        "url": "http://localhost:8058/artifacts/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i/screenshot-0.png",
         "filename": "screenshot-0.png",
         "step": 0
       }
@@ -446,7 +446,7 @@ curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -475,7 +475,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -517,7 +517,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 - ✅ **Redis Queue**: Replaced filesystem queue with BullMQ for reliability
 - ✅ **Docker Ready**: Full Docker support with docker-compose
 - ✅ **Better Scaling**: Multiple workers, concurrent processing
-- ✅ **Configurable Ports**: Easy deployment on different ports (default: 8092)
+- ✅ **Configurable Ports**: Easy deployment on different ports (default: 8058)
 - ✅ **Job Retry**: Automatic retry with exponential backoff
 - ✅ **Better Monitoring**: Queue statistics and job tracking
 - ✅ **JSON Workflows**: Flexible, dynamic action sequences

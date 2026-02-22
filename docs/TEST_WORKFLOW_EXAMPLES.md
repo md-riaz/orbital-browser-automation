@@ -1,9 +1,9 @@
 # Orbital Browser Automation - Workflow Test Examples
 
-This document contains real-world workflow examples tested with the Orbital API running on port 8092.
+This document contains real-world workflow examples tested with the Orbital API running on port 8058.
 
 ## Test Environment
-- **Server**: Fastify API running on port 8092
+- **Server**: Fastify API running on port 8058
 - **Queue**: Redis (BullMQ)
 - **Worker**: Node.js Playwright workers
 - **Database**: SQLite
@@ -13,7 +13,7 @@ This document contains real-world workflow examples tested with the Orbital API 
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -37,7 +37,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Job Status Check:**
 ```bash
-curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
+curl http://localhost:8058/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
   -H "X-API-Key: your-secret-api-key-change-me"
 ```
 
@@ -53,7 +53,7 @@ curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
     "artifacts": [
       {
         "type": "screenshot",
-        "url": "http://localhost:8092/artifacts/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i/screenshot-0.png",
+        "url": "http://localhost:8058/artifacts/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i/screenshot-0.png",
         "filename": "screenshot-0.png",
         "step": 0
       }
@@ -67,7 +67,7 @@ curl http://localhost:8092/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -97,7 +97,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -148,7 +148,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
@@ -193,7 +193,7 @@ curl -X POST http://localhost:8092/api/v1/jobs \
 
 **Invalid Workflow Request:**
 ```bash
-curl -X POST http://localhost:8092/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
   -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
