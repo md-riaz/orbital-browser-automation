@@ -92,9 +92,14 @@ cd orbital-browser-automation
 
 2. **Install dependencies**:
 ```bash
+# Install server dependencies
 cd server && npm install
+
+# Install worker dependencies (this will automatically install Chromium)
 cd ../worker && npm install
-npx playwright install chromium
+
+# On Linux, you may also need to install system dependencies for Chromium
+npx playwright install-deps chromium
 ```
 
 3. **Start Redis**:
@@ -300,6 +305,32 @@ console.log(stats); // { waiting, active, completed, failed }
 - Format: Timestamped execution trace
 
 ## Troubleshooting
+
+### Chromium Executable Not Found
+
+If you encounter an error like `browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1208/...`:
+
+**Solution 1: Install Chromium browser binaries**
+```bash
+cd worker
+npx playwright install chromium
+```
+
+**Solution 2: Install system dependencies (Linux)**
+```bash
+cd worker
+npx playwright install-deps chromium
+```
+
+**Solution 3: Reinstall worker dependencies**
+```bash
+cd worker
+rm -rf node_modules
+npm install
+# The postinstall script will automatically install Chromium
+```
+
+**For Docker deployments:** Simply run `docker-compose up` - no additional commands needed. The Dockerfile automatically uses the system's Chromium package and skips browser downloads.
 
 ### Redis Connection Issues
 

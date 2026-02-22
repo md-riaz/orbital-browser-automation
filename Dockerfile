@@ -68,8 +68,9 @@ RUN apk add --no-cache \
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Copy package files
+# Copy package files and postinstall script
 COPY worker/package*.json ./worker/
+COPY worker/postinstall.js ./worker/
 
 # Install dependencies
 RUN cd worker && npm ci --only=production

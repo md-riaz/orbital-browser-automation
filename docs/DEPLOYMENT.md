@@ -56,10 +56,11 @@ cd server
 sudo npm install --production
 cd ..
 
-# Worker dependencies
+# Worker dependencies (postinstall will automatically install Chromium)
 cd worker
 sudo npm install --production
-sudo npx playwright install chromium
+
+# Install system dependencies for Chromium (required on Linux)
 sudo npx playwright install-deps chromium
 cd ..
 ```
@@ -303,11 +304,20 @@ du -sh /var/www/orbital/storage/app/artifacts
 ## Troubleshooting
 
 ### Chromium Installation Issues
-If Playwright fails to install Chromium:
+If Playwright fails to install Chromium or you get "Executable doesn't exist" errors:
+
 ```bash
 cd /var/www/orbital/worker
-sudo npx playwright install-deps chromium
+
+# Install Chromium browser binaries
 sudo npx playwright install chromium
+
+# Install system dependencies for Chromium (required)
+sudo npx playwright install-deps chromium
+
+# Or reinstall worker dependencies (postinstall will handle Chromium)
+sudo rm -rf node_modules
+sudo npm install --production
 ```
 
 ### Permission Issues

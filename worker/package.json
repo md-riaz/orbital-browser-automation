@@ -5,7 +5,8 @@
   "main": "worker.js",
   "type": "module",
   "scripts": {
-    "start": "node worker.js"
+    "start": "node worker.js",
+    "postinstall": "node postinstall.js"
   },
   "dependencies": {
     "playwright": "^1.48.0",

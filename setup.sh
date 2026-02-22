@@ -28,7 +28,7 @@ npm install
 echo "Installing worker dependencies..."
 cd ../worker
 npm install
-npx playwright install chromium
+npx playwright install-deps chromium
 
 cd ..
 

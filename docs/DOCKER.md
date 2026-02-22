@@ -2,6 +2,8 @@
 
 ## Quick Start with Docker
 
+**Simple one-command deployment - no additional setup required!**
+
 1. **Copy environment file**:
    ```bash
    cp .env.docker .env
@@ -12,6 +14,8 @@
    ```bash
    docker-compose up -d
    ```
+
+   That's it! The Docker containers handle all dependencies automatically, including Chromium browser installation.
 
 3. **View logs**:
    ```bash

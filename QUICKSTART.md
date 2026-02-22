@@ -4,9 +4,8 @@ Get Orbital running in under 5 minutes.
 
 ## Prerequisites
 
-- PHP 8.3+
 - Node.js 20+
-- Composer
+- Redis 7+
 
 ## Installation Steps
 
@@ -17,13 +16,17 @@ Get Orbital running in under 5 minutes.
 git clone https://github.com/md-riaz/orbital-browser-automation.git
 cd orbital-browser-automation
 
-# Install PHP dependencies
-composer install
-
-# Install Node.js dependencies
-cd browser-worker
+# Install server dependencies
+cd server
 npm install
-npx playwright install chromium
+cd ..
+
+# Install worker dependencies (automatically installs Chromium)
+cd worker
+npm install
+
+# On Linux, install system dependencies for Chromium
+npx playwright install-deps chromium
 cd ..
 ```
 
@@ -33,26 +36,35 @@ cd ..
 # Create .env file
 cp .env.example .env
 
-# Create SQLite database
-touch database/database.sqlite
-
-# Generate application key
-php artisan key:generate
-
-# Run migrations
-php artisan migrate
+# Edit .env and set your API_KEYS
+nano .env
 ```
 
-### 3. Start Services
+### 3. Start Redis
 
-**Terminal 1 - Laravel Server:**
 ```bash
-php artisan serve
+# Option 1: Using Docker
+docker run -d -p 6379:6379 redis:7-alpine
+
+# Option 2: Using system Redis (Linux/Mac)
+redis-server
 ```
 
-**Terminal 2 - Queue Worker:**
+### 4. Start Services
+
+**Terminal 1 - API Server:**
 ```bash
-php artisan queue:work --tries=1
+npm run start:server
+```
+
+**Terminal 2 - Worker:**
+```bash
+npm run start:worker
+```
+
+**Or start both:**
+```bash
+npm start
 ```
 
 ## Test the API
@@ -60,7 +72,8 @@ php artisan queue:work --tries=1
 ### Create a Job
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/jobs \
+curl -X POST http://localhost:8058/api/v1/jobs \
+  -H "X-API-Key: your-secret-api-key-change-me" \
   -H "Content-Type: application/json" \
   -d '{
     "workflow": {
@@ -83,7 +96,8 @@ Response:
 ### Check Job Status
 
 ```bash
-curl http://localhost:8000/api/v1/jobs/{job_id}
+curl http://localhost:8058/api/v1/jobs/{job_id} \
+  -H "X-API-Key: your-secret-api-key-change-me"
 ```
 
 Response:
@@ -95,7 +109,7 @@ Response:
     "artifacts": [
       {
         "type": "screenshot",
-        "url": "http://localhost/artifacts/{job_id}/screenshot-0.png"
+        "url": "http://localhost:8058/artifacts/{job_id}/screenshot-0.png"
       }
     ]
   }
@@ -104,25 +118,36 @@ Response:
 
 ## What's Next?
 
-- Check `docs/EXAMPLES.md` for more workflow examples
-- See `docs/DEPLOYMENT.md` for production setup
-- View `docs/TEST_RESULTS.txt` for complete test verification
+- Check [docs/EXAMPLES.md](docs/EXAMPLES.md) for more workflow examples
+- See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production setup
+- View [docs/DOCKER.md](docs/DOCKER.md) for Docker deployment
 
 ## Troubleshooting
 
-### "Chromium not found"
+### "Chromium not found" or "Executable doesn't exist"
 ```bash
-cd browser-worker
+cd worker
+
+# Install Chromium browser binaries
 npx playwright install chromium
+
+# Install system dependencies (Linux only)
+npx playwright install-deps chromium
 ```
 
-### "Permission denied" errors
+### "Redis connection refused"
+Make sure Redis is running:
 ```bash
-chmod -R 775 storage bootstrap/cache
+# Check if Redis is running
+redis-cli ping
+# Should return: PONG
+
+# Or start Redis with Docker
+docker run -d -p 6379:6379 redis:7-alpine
 ```
 
-### Queue not processing
-Make sure the queue worker is running:
+### Worker not processing jobs
+Make sure the worker is running:
 ```bash
-php artisan queue:work --tries=1
+npm run start:worker
 ```
