@@ -33,9 +33,9 @@ const env = parseEnv();
 
 export default {
     // Server
-    port: parseInt(process.env.PORT || env.PORT || '8092'),
+    port: parseInt(process.env.PORT || env.PORT || '8058'),
     host: process.env.HOST || env.HOST || '0.0.0.0',
-    appUrl: process.env.APP_URL || env.APP_URL || 'http://localhost:8092',
+    appUrl: process.env.APP_URL || env.APP_URL || 'http://localhost:8058',
 
     // Database
     dbPath: process.env.DB_PATH || env.DB_DATABASE || path.join(__dirname, '..', 'database', 'database.sqlite'),

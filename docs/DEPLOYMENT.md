@@ -75,7 +75,7 @@ Update the following in `.env`:
 APP_NAME=Orbital
 APP_ENV=production
 APP_URL=https://your-domain.com
-PORT=8092
+PORT=8058
 HOST=0.0.0.0
 
 # Redis Configuration
@@ -148,7 +148,7 @@ server {
 
     # API endpoints
     location / {
-        proxy_pass http://localhost:8092;
+        proxy_pass http://localhost:8058;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
