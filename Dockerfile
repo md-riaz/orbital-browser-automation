@@ -42,7 +42,7 @@ COPY .env.example ./.env
 RUN mkdir -p /app/storage/app/artifacts /app/database
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8058
 
 # Start server
 CMD ["node", "server/server.js"]

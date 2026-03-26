@@ -39,6 +39,37 @@ const DB_PATH = process.env.DB_PATH || env.DB_DATABASE || path.join(__dirname, '
 const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage', 'app', 'artifacts');
 const LOG_PATH = path.join(__dirname, 'logs');
 const REDIS_URL = process.env.REDIS_URL || env.REDIS_URL || 'redis://localhost:6379';
+const CHROMIUM_EXECUTABLE_PATH =
+    process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+    env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+
+function resolveExecutablePath(preferredPath) {
+    const bundledPath = typeof chromium.executablePath === 'function' ? chromium.executablePath() : null;
+
+    if (preferredPath) {
+        if (fs.existsSync(preferredPath)) {
+            return preferredPath;
+        }
+
+        // Alpine ships both chromium and chromium-browser in different versions; try the alternative name
+        if (preferredPath.endsWith('chromium-browser') && fs.existsSync('/usr/bin/chromium')) {
+            return '/usr/bin/chromium';
+        }
+
+        if (bundledPath && fs.existsSync(bundledPath)) {
+            console.warn(`Chromium executable not found at ${preferredPath}, falling back to bundled Playwright binary.`);
+            return bundledPath;
+        }
+
+        throw new Error(`Chromium executable not found at ${preferredPath}. Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH to a valid path or install Playwright browsers.`);
+    }
+
+    if (bundledPath && fs.existsSync(bundledPath)) {
+        return bundledPath;
+    }
+
+    throw new Error('No Chromium executable found. Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH or install Playwright browsers (npx playwright install chromium).');
+}
 
 // Ensure directories exist
 for (const dir of [STORAGE_PATH, LOG_PATH]) {
@@ -146,9 +177,13 @@ class WorkflowExecutor {
 
             // Launch browser
             this.log('Launching Chromium...');
+            const launchArgs = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'];
+            const executablePath = resolveExecutablePath(CHROMIUM_EXECUTABLE_PATH);
+
             this.browser = await chromium.launch({
                 headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                executablePath,
+                args: launchArgs
             });
 
             this.context = await this.browser.newContext({
