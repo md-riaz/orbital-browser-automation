@@ -44,6 +44,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - DB_DATABASE=/app/database/database.sqlite
       - STORAGE_PATH=/app/storage/app/artifacts
+      - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
     volumes:
       - ./database:/app/database
       - ./storage/app/artifacts:/app/storage/app/artifacts

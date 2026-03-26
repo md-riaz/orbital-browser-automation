@@ -53,6 +53,13 @@ fastify.register(fastifyStatic, {
 fastify.post('/api/v1/jobs', async (request, reply) => {
     const body = request.body;
 
+    if (!body || typeof body !== 'object') {
+        return reply.code(422).send({
+            error: 'Validation failed',
+            details: { body: ['request body is required'] }
+        });
+    }
+
     // Validate workflow structure
     if (!body.workflow || typeof body.workflow !== 'object') {
         return reply.code(422).send({

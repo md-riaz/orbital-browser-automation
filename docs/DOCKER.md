@@ -35,6 +35,17 @@ The Docker setup includes:
 - **Server**: Fastify API server (port 8058)
 - **Worker**: Playwright automation workers (2 replicas by default)
 
+### Browser Configuration
+
+Workers use the system Chromium package baked into the Docker image. The following environment variables ensure Playwright launches the correct binary without downloading another copy:
+
+```env
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+```
+
+If you change the base image or Chromium path, update `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` accordingly.
+
 ## Port Configuration
 
 By default, the following ports are exposed:
