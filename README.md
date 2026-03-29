@@ -1,168 +1,152 @@
 # Orbital - Headless Browser Automation Service
 
-Orbital is a **minimal**, **production-ready** Headless Browser Automation Service built with Fastify, Redis (BullMQ), and SQLite. It accepts JSON-defined automation workflows via REST API, queues them using a robust message queue, and executes them via Playwright worker processes.
+Orbital is a production-ready headless browser automation service built with **Fastify**, **Redis (BullMQ)**, **SQLite**, and **Playwright**. It accepts JSON-defined automation workflows over HTTP, queues them reliably, and executes them in Playwright workers.
 
 ## Features
 
-- 🚀 **Modern Stack**: Fastify + Redis (BullMQ) + SQLite
-- 🎭 **Playwright-powered** browser automation
-- 🔒 **Built-in security** (SSRF protection, input validation, API key auth)
-- 💾 **Simple persistence**: SQLite for job tracking, Redis for queue
-- 📦 **Docker-ready**: One-command deployment with docker-compose
-- ⚡ **Fast and scalable**: Concurrent job processing, horizontal scaling
-- 🌐 **Unique port configuration**: Deploy multiple instances easily
+- 🚀 Fastify API + BullMQ queue + SQLite job tracking
+- 🎭 Playwright-powered browser automation workers
+- 🔒 API-key authentication for all automation endpoints
+- 🧭 Swagger UI for the public API
+- 🛠️ Admin web UI for API key management and job monitoring
+- 💾 Artifact storage for screenshots/downloads
+- 🐳 Docker-first deployment
+- ⚡ Multi-worker processing via Redis queue
 
-## Architecture
+## Current Architecture
 
+```text
+Client -> Fastify API -> Redis (BullMQ) -> Playwright Workers -> Artifacts
+                  \-> SQLite (jobs + API keys)
+                  \-> Admin UI
 ```
-Client → Fastify API → Redis (BullMQ) → Node.js Playwright Workers → Artifacts
-                ↓
-            SQLite DB
+
+## Components
+
+### API Server (`server/`)
+- Fastify REST API
+- Swagger / OpenAPI docs
+- API-key auth (`X-API-Key`)
+- Admin login + admin pages
+- Job creation/status endpoints
+- Artifact serving
+
+### Worker (`worker/`)
+- BullMQ job processing
+- Executes Playwright workflows
+- Writes results/artifacts
+- Updates job status in SQLite
+
+### Redis
+- Queue backend for BullMQ
+
+### SQLite
+- Stores automation jobs
+- Stores managed API keys
+- Stores job attribution to API key labels
+
+## Authentication Model
+
+Orbital now uses **API-key-only auth** for the public API.
+
+### Public endpoint
+- `GET /health`
+
+### Protected endpoints
+- all `/api/v1/*` endpoints require:
+
+```http
+X-API-Key: <your-api-key>
 ```
 
-### Components
+> Bearer auth is no longer the documented/public auth model.
 
-1. **API Server** (`server/`)
-   - Fastify-based REST API
-   - API key authentication
-   - Request validation and SSRF protection
-   - Job creation and status endpoints
-   - Artifact serving
+## Admin UI
 
-2. **Worker** (`worker/`)
-   - BullMQ-powered job processor
-   - Executes Playwright automation workflows
-   - Updates job status in SQLite
-   - Stores artifacts (screenshots, downloads)
-   - Concurrent processing (5 jobs per worker)
+Orbital now includes an admin web interface.
 
-3. **Queue** (Redis + BullMQ)
-   - Reliable message queue
-   - Job retry with exponential backoff
-   - Job prioritization and scheduling
-   - Failed job management
+### Admin pages
+- `/admin/login`
+- `/admin`
+- `/admin/api-keys`
+- `/admin/jobs`
+- `/admin/jobs/:id`
 
-## Tech Stack
+### Admin capabilities
+- login with admin username/password
+- create API keys
+- rotate API keys
+- revoke API keys
+- delete API keys
+- view recent jobs
+- filter/search jobs
+- inspect job details and results
 
-- **API Server**: Fastify 5, Node.js 20+
-- **Queue**: Redis 7 + BullMQ 5
-- **Worker**: Node.js 20+, Playwright (Chromium)
-- **Database**: SQLite (better-sqlite3)
-- **Auth**: API key-based (no sessions, no OAuth)
+## Swagger / API Docs
 
-## Quick Start with Docker 🐳
+Public API docs are available at:
 
-The fastest way to get started is with Docker:
+- `/docs`
+- `/docs/json`
+
+Swagger intentionally shows **only** the public API routes:
+- `/health`
+- `POST /api/v1/jobs`
+- `GET /api/v1/jobs/{id}`
+
+Admin routes are hidden from Swagger.
+
+## Quick Start with Docker
 
 ```bash
-# 1. Clone repository
-git clone <repository-url>
+# 1. Clone
+git clone https://github.com/md-riaz/orbital-browser-automation.git
 cd orbital-browser-automation
 
 # 2. Configure environment
-cp .env.docker .env
-# Edit .env and set your API_KEYS
+cp .env.example .env
+# edit .env
 
-# 3. Start all services
-docker-compose up -d
+# 3. Start the stack
+docker compose up -d --build
 
-# 4. Test the API
+# 4. Check health
 curl http://localhost:8058/health
 ```
 
-That's it! The API is running on port 8058.
-
-See [docs/DOCKER.md](docs/DOCKER.md) for detailed Docker documentation.
-
-## Installation (Non-Docker)
-
-### Prerequisites
-
-- Node.js 20+
-- Redis 7+
-- npm or yarn
-
-### Setup
-
-1. **Clone the repository**:
-```bash
-git clone <repository-url>
-cd orbital-browser-automation
-```
-
-2. **Install dependencies**:
-```bash
-# Install server dependencies
-cd server && npm install
-
-# Install worker dependencies (this will automatically install Chromium)
-cd ../worker && npm install
-
-# On Linux, you may also need to install system dependencies for Chromium
-npx playwright install-deps chromium
-```
-
-3. **Start Redis**:
-```bash
-# Linux/Mac
-redis-server
-
-# Or with Docker
-docker run -d -p 6379:6379 redis:7-alpine
-```
-
-4. **Configure environment**:
-```bash
-cp .env.example .env
-# Edit .env and set your API_KEYS and REDIS_URL
-```
-
-5. **Start services**:
-```bash
-# Terminal 1: Start API server
-npm run start:server
-
-# Terminal 2: Start worker
-npm run start:worker
-```
-
-## Configuration
-
-Key environment variables in `.env`:
+## Important Environment Variables
 
 ```env
-# API Server
 APP_URL=http://localhost:8058
 PORT=8058
 HOST=0.0.0.0
 
-# Redis (Queue)
 REDIS_URL=redis://localhost:6379
-
-# Database
 DB_DATABASE=database/database.sqlite
 
-# Authentication
-API_KEYS=your-secret-key-1,your-secret-key-2
+# Bootstrap API keys for initial setup only
+API_KEYS=your-secret-api-key-change-me
+
+# Admin web login
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-this-password
+ADMIN_SESSION_SECRET=change-this-session-secret
 ```
 
-## API Documentation
+### Notes on API keys
+- `API_KEYS` is only for initial bootstrap
+- the admin panel can create/rotate/revoke/delete keys after startup
+- API clients should send the raw key in `X-API-Key`
 
-### Authentication
+## Public API
 
-All API requests (except `/health`) require an API key:
+### Health check
 
 ```bash
-# Via header
-curl -H "X-API-Key: your-secret-key" ...
-
-# Or via Authorization header
-curl -H "Authorization: Bearer your-secret-key" ...
+curl http://localhost:8058/health
 ```
 
-### Create Job
-
-**POST** `/api/v1/jobs`
+### Create job
 
 ```bash
 curl -X POST http://localhost:8058/api/v1/jobs \
@@ -172,34 +156,43 @@ curl -X POST http://localhost:8058/api/v1/jobs \
     "workflow": {
       "steps": [
         { "action": "goto", "url": "https://example.com" },
-        { "action": "wait", "duration": 2000 },
+        { "action": "wait", "duration": 1000 },
         { "action": "screenshot", "fullPage": true }
       ]
     },
     "options": {
       "timeout": 60000,
-      "viewport": { "width": 1920, "height": 1080 }
+      "viewport": { "width": 1440, "height": 900 }
     }
   }'
 ```
 
-#### Get Job Status
+Response:
 
-**GET** `/api/v1/jobs/:id`
+```json
+{
+  "job_id": "uuid-here",
+  "status": "pending"
+}
+```
+
+### Get job status
 
 ```bash
 curl http://localhost:8058/api/v1/jobs/{job_id} \
   -H "X-API-Key: your-secret-key"
 ```
 
-**Response:**
+Example response:
+
 ```json
 {
-  "job_id": "uuid",
+  "job_id": "uuid-here",
   "status": "completed",
   "created_at": "2026-02-20T12:00:00.000Z",
   "started_at": "2026-02-20T12:00:01.000Z",
   "finished_at": "2026-02-20T12:00:05.000Z",
+  "api_key_label": "Test Client",
   "result": {
     "artifacts": [
       {
@@ -214,345 +207,49 @@ curl http://localhost:8058/api/v1/jobs/{job_id} \
 }
 ```
 
-## Supported Actions
+## Supported Workflow Actions
 
 | Action | Description | Parameters |
 |--------|-------------|------------|
-| `goto` | Navigate to URL | `url` (string) |
-| `wait` | Wait for duration | `duration` (number, ms) |
-| `click` | Click element | `selector` (string) |
-| `type` | Type text into element | `selector` (string), `value` (string) |
-| `waitForSelector` | Wait for element | `selector` (string) |
-| `screenshot` | Take screenshot | `fullPage` (boolean, optional) |
+| `goto` | Navigate to URL | `url` |
+| `wait` | Wait for duration in ms | `duration` |
+| `click` | Click an element | `selector` |
+| `type` | Type text into element | `selector`, `value` |
+| `waitForSelector` | Wait for element to appear | `selector` |
+| `screenshot` | Capture screenshot | `fullPage` |
 | `waitForDownload` | Wait for file download | none |
-| `evaluate` | Execute JavaScript | `script` (string) |
+| `evaluate` | Execute JavaScript in page context | `script` |
 
-## Security
+## Deployment Notes
 
-- **API Key Authentication**: Required for all endpoints
-- **SSRF Protection**: Rejects internal/private IP addresses
-- **URL Validation**: Blocks `file://` URLs
-- **Input Limits**: Max 50KB JSON, 25 steps per workflow
-- **Timeout Controls**: 60s default, 120s max execution time
-- **Sandboxing**: Worker runs in Chromium sandbox
+### Docker (recommended)
+- one server container
+- one Redis container
+- one or more worker containers
+- Nginx/Caddy can sit in front for TLS and subdomain routing
 
-## Deployment
+### Production suggestions
+- keep API behind HTTPS
+- use the admin panel to rotate bootstrap API keys after first deploy
+- do not expose Redis publicly
+- back up the SQLite database and artifact storage
 
-### Docker (Recommended)
+## Admin Workflow Recommendation
 
-```bash
-# Start with docker-compose
-docker-compose up -d
+After first deploy:
+1. log into `/admin/login`
+2. create a new named API key for each client/use case
+3. rotate or revoke the bootstrap key from `.env`
+4. use `/admin/jobs` to monitor job traffic
 
-# Scale workers
-docker-compose up -d --scale worker=5
+## Docs and Examples
 
-# View logs
-docker-compose logs -f worker
-```
-
-### Production (Non-Docker)
-
-1. **Use process manager** (PM2):
-```bash
-pm2 start server/server.js --name orbital-api
-pm2 start worker/worker.js --name orbital-worker -i 4
-pm2 save
-```
-
-2. **Set up reverse proxy** (nginx):
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:8058;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-3. **Secure with HTTPS**:
-```bash
-certbot --nginx -d your-domain.com
-```
-
-### Scaling
-
-**Horizontal Scaling:**
-- Run multiple worker instances
-- Workers automatically coordinate via Redis
-- Each worker processes 5 jobs concurrently
-
-**Vertical Scaling:**
-- Adjust worker concurrency in `worker/worker.js`
-- Increase server resources (CPU/RAM)
-
-## Monitoring
-
-**Queue Statistics:**
-```javascript
-import { getQueueStats } from './server/queue.js';
-const stats = await getQueueStats();
-console.log(stats); // { waiting, active, completed, failed }
-```
-
-**Worker Logs:**
-- Location: `worker/logs/{job_id}.log`
-- Format: Timestamped execution trace
-
-## Troubleshooting
-
-### Chromium Executable Not Found
-
-If you encounter an error like `browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1208/...`:
-
-**Solution 1: Install Chromium browser binaries**
-```bash
-cd worker
-npx playwright install chromium
-```
-
-**Solution 2: Install system dependencies (Linux)**
-```bash
-cd worker
-npx playwright install-deps chromium
-```
-
-**Solution 3: Reinstall worker dependencies**
-```bash
-cd worker
-rm -rf node_modules
-npm install
-# The postinstall script will automatically install Chromium
-```
-
-**For Docker deployments:** Simply run `docker-compose up` - no additional commands needed. The Dockerfile automatically uses the system's Chromium package and skips browser downloads.
-
-### Redis Connection Issues
-
-```bash
-# Check Redis is running
-docker ps | grep redis
-# Or
-redis-cli ping
-
-# Test connection
-telnet localhost 6379
-```
-
-### Worker Not Processing Jobs
-
-1. Check worker logs: `docker-compose logs worker`
-2. Verify Redis connection
-3. Check database permissions
-
-### Jobs Stuck in Queue
-
-```bash
-# View queue via Redis CLI
-docker exec -it orbital-redis redis-cli
-> KEYS bull:automation-jobs:*
-> LLEN bull:automation-jobs:wait
-```
-
-## Example Use Cases
-
-### 1. Take a Screenshot
-
-```bash
-curl -X POST http://localhost:8058/api/v1/jobs \
-  -H "X-API-Key: your-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow": {
-      "steps": [
-        { "action": "goto", "url": "https://github.com" },
-        { "action": "screenshot", "fullPage": true }
-      ]
-    }
-  }'
-```
-
-### 2. Automated Form Filling
-
-```bash
-curl -X POST http://localhost:8058/api/v1/jobs \
-  -H "X-API-Key: your-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow": {
-      "steps": [
-        { "action": "goto", "url": "https://example.com/form" },
-        { "action": "type", "selector": "input[name=email]", "value": "test@example.com" },
-        { "action": "type", "selector": "input[name=name]", "value": "John Doe" },
-        { "action": "click", "selector": "button[type=submit]" },
-        { "action": "waitForSelector", "selector": ".success-message" },
-        { "action": "screenshot" }
-      ]
-    }
-  }'
-```
-
-### 3. Web Scraping
-
-```bash
-curl -X POST http://localhost:8058/api/v1/jobs \
-  -H "X-API-Key: your-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow": {
-      "steps": [
-        { "action": "goto", "url": "https://news.ycombinator.com" },
-        { "action": "waitForSelector", "selector": ".titleline" },
-        {
-          "action": "evaluate",
-          "script": "Array.from(document.querySelectorAll(\".titleline > a\")).map(a => ({ title: a.textContent, url: a.href }))"
-        }
-      ]
-    }
-  }'
-```
-
-## Tested Workflow Examples
-
-### Example 1: Screenshot Capture
-
-**Request:**
-```bash
-curl -X POST http://localhost:8058/api/v1/jobs \
-  -H "X-API-Key: your-secret-api-key-change-me" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow": {
-      "steps": [
-        { "action": "goto", "url": "https://example.com" },
-        { "action": "wait", "duration": 1000 },
-        { "action": "screenshot", "fullPage": true }
-      ]
-    }
-  }'
-```
-
-**Response:**
-```json
-{
-  "job_id": "a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i",
-  "status": "pending"
-}
-```
-
-**Check Job Status:**
-```bash
-curl http://localhost:8058/api/v1/jobs/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i \
-  -H "X-API-Key: your-secret-api-key-change-me"
-```
-
-**Completed Response:**
-```json
-{
-  "job_id": "a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i",
-  "status": "completed",
-  "created_at": "2026-02-21T00:00:00.000Z",
-  "started_at": "2026-02-21T00:00:01.500Z",
-  "finished_at": "2026-02-21T00:00:05.200Z",
-  "result": {
-    "artifacts": [
-      {
-        "type": "screenshot",
-        "url": "http://localhost:8058/artifacts/a3f1b2c4-5d6e-7f8a-9b0c-1d2e3f4g5h6i/screenshot-0.png",
-        "filename": "screenshot-0.png",
-        "step": 0
-      }
-    ],
-    "steps_completed": 3
-  }
-}
-```
-
-### Example 2: Form Automation
-
-**Request:**
-```bash
-curl -X POST http://localhost:8058/api/v1/jobs \
-  -H "X-API-Key: your-secret-api-key-change-me" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow": {
-      "steps": [
-        { "action": "goto", "url": "https://example.com/contact" },
-        { "action": "type", "selector": "input[name=email]", "value": "test@example.com" },
-        { "action": "type", "selector": "input[name=name]", "value": "John Doe" },
-        { "action": "click", "selector": "button[type=submit]" },
-        { "action": "waitForSelector", "selector": ".success-message" },
-        { "action": "screenshot" }
-      ]
-    }
-  }'
-```
-
-**Response:**
-```json
-{
-  "job_id": "b7c8d9e0-f1a2-3b4c-5d6e-7f8g9h0i1j2k",
-  "status": "pending"
-}
-```
-
-### Example 3: Data Extraction
-
-**Request:**
-```bash
-curl -X POST http://localhost:8058/api/v1/jobs \
-  -H "X-API-Key: your-secret-api-key-change-me" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow": {
-      "steps": [
-        { "action": "goto", "url": "https://news.ycombinator.com" },
-        { "action": "waitForSelector", "selector": ".titleline" },
-        {
-          "action": "evaluate",
-          "script": "Array.from(document.querySelectorAll(\".titleline > a\")).slice(0, 5).map(a => ({ title: a.textContent, url: a.href }))"
-        }
-      ]
-    }
-  }'
-```
-
-**Completed Response with Data:**
-```json
-{
-  "job_id": "c1d2e3f4-g5h6-i7j8-k9l0-m1n2o3p4q5r6",
-  "status": "completed",
-  "result": {
-    "evaluation_results": [
-      [
-        {"title": "Show HN: My Project", "url": "https://example.com/project"},
-        {"title": "Ask HN: Question", "url": "https://news.ycombinator.com/item?id=123"}
-      ]
-    ],
-    "steps_completed": 3
-  }
-}
-```
-
-> **Note**: See [docs/TEST_WORKFLOW_EXAMPLES.md](docs/TEST_WORKFLOW_EXAMPLES.md) for more detailed examples and test results.
-
-## Differences from Previous Version
-
-**Improvements:**
-- ✅ **Redis Queue**: Replaced filesystem queue with BullMQ for reliability
-- ✅ **Docker Ready**: Full Docker support with docker-compose
-- ✅ **Better Scaling**: Multiple workers, concurrent processing
-- ✅ **Configurable Ports**: Easy deployment on different ports (default: 8058)
-- ✅ **Job Retry**: Automatic retry with exponential backoff
-- ✅ **Better Monitoring**: Queue statistics and job tracking
-- ✅ **JSON Workflows**: Flexible, dynamic action sequences
+- `QUICKSTART.md`
+- `docs/DOCKER.md`
+- `docs/DEPLOYMENT.md`
+- `docs/EXAMPLES.md`
+- `docs/TEST_WORKFLOW_EXAMPLES.md`
 
 ## License
 
-This project is open-sourced software licensed under the MIT license.
+MIT
