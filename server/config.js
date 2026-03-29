@@ -20,7 +20,6 @@ function parseEnv() {
         if (match) {
             const key = match[1].trim();
             let value = match[2].trim();
-            // Remove quotes if present
             value = value.replace(/^["'](.*)["']$/, '$1');
             env[key] = value;
         }
@@ -46,11 +45,16 @@ export default {
     // Storage
     storagePath: process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage', 'app', 'artifacts'),
 
-    // Security
-    apiKeys: (process.env.API_KEYS || env.API_KEYS || 'default-key-change-me').split(',').map(k => k.trim()),
+    // Security / bootstrap API keys
+    apiKeys: (process.env.API_KEYS || env.API_KEYS || 'default-key-change-me').split(',').map(k => k.trim()).filter(Boolean),
+
+    // Admin web login
+    adminUsername: process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || 'admin',
+    adminPassword: process.env.ADMIN_PASSWORD || env.ADMIN_PASSWORD || 'change-this-password',
+    adminSessionSecret: process.env.ADMIN_SESSION_SECRET || env.ADMIN_SESSION_SECRET || 'change-this-session-secret',
 
     // Limits
-    maxJsonSize: 50 * 1024, // 50KB
+    maxJsonSize: 50 * 1024,
     maxSteps: 25,
 
     // Timeouts

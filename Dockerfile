@@ -1,42 +1,21 @@
 # Multi-stage build for API server
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS server
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build/runtime dependencies for better-sqlite3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy package files
 COPY server/package*.json ./server/
-COPY worker/package*.json ./worker/
-COPY package.json ./
 
 # Install dependencies
-RUN cd server && npm ci --only=production
-RUN cd worker && npm ci --only=production
-
-# Production stage for server
-FROM node:20-alpine AS server
-
-# Install runtime dependencies for better-sqlite3
-RUN apk add --no-cache python3 make g++
-
-WORKDIR /app
-
-# Copy package files
-COPY server/package*.json ./server/
-
-# Install dependencies (this will download pre-built binaries)
-RUN cd server && npm ci --only=production
-
-# Remove pre-built binaries and rebuild from source for Alpine
-RUN cd server && \
-    rm -rf node_modules/better-sqlite3/build && \
-    npm rebuild better-sqlite3
+RUN cd server && npm ci --omit=dev
 
 # Copy code
 COPY server ./server
-COPY .env.example ./.env
 
 # Create necessary directories
 RUN mkdir -p /app/storage/app/artifacts /app/database
@@ -78,7 +57,7 @@ RUN cd worker && npm ci --only=production
 # Remove pre-built binaries and rebuild from source for Alpine
 RUN cd worker && \
     rm -rf node_modules/better-sqlite3/build && \
-    npm rebuild better-sqlite3
+    npm rebuild better-sqlite3 --build-from-source
 
 # Copy code
 COPY worker ./worker
