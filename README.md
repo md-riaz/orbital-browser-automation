@@ -209,16 +209,16 @@ Example response:
 
 ## Supported Workflow Actions
 
-| Action | Description | Parameters |
-|--------|-------------|------------|
-| `goto` | Navigate to URL | `url` |
-| `wait` | Wait for duration in ms | `duration` |
-| `click` | Click an element | `selector` |
-| `type` | Type text into element | `selector`, `value` |
-| `waitForSelector` | Wait for element to appear | `selector` |
-| `screenshot` | Capture screenshot | `fullPage` |
-| `waitForDownload` | Wait for file download | none |
-| `evaluate` | Execute JavaScript in page context | `script` |
+| Action | Description | Parameters (type) | Example step |
+|--------|-------------|-------------------|--------------|
+| `goto` | Navigate to a URL | `url` (`string`, required) | `{ "action": "goto", "url": "https://example.com" }` |
+| `wait` | Wait for a duration in milliseconds | `duration` (`number`, required, `0-60000`) | `{ "action": "wait", "duration": 1500 }` |
+| `click` | Click an element matched by a CSS selector | `selector` (`string`, required) | `{ "action": "click", "selector": "button[type=submit]" }` |
+| `type` | Fill an input or textarea matched by a CSS selector | `selector` (`string`, required), `value` (`string`, required) | `{ "action": "type", "selector": "input[name=email]", "value": "test@example.com" }` |
+| `waitForSelector` | Wait for an element to appear in the page | `selector` (`string`, required) | `{ "action": "waitForSelector", "selector": ".success-message" }` |
+| `screenshot` | Capture a screenshot and save it as an artifact | `fullPage` (`boolean`, optional, default `false`) | `{ "action": "screenshot", "fullPage": true }` |
+| `waitForDownload` | Wait for the next browser download and save it as an artifact | none | `{ "action": "waitForDownload" }` |
+| `evaluate` | Execute JavaScript in the page context | `script` (`string`, required) | `{ "action": "evaluate", "script": "document.title" }` |
 
 ## Deployment Notes
 

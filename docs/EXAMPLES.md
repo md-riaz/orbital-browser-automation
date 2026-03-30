@@ -2,6 +2,19 @@
 
 This document contains example workflows for Orbital Browser Automation.
 
+## Supported workflow actions
+
+| Action | Parameters (type) | Example step |
+|--------|-------------------|--------------|
+| `goto` | `url` (`string`, required) | `{ "action": "goto", "url": "https://example.com" }` |
+| `wait` | `duration` (`number`, required, `0-60000`) | `{ "action": "wait", "duration": 1500 }` |
+| `click` | `selector` (`string`, required) | `{ "action": "click", "selector": "button[type='submit']" }` |
+| `type` | `selector` (`string`, required), `value` (`string`, required) | `{ "action": "type", "selector": "#email", "value": "john@example.com" }` |
+| `waitForSelector` | `selector` (`string`, required) | `{ "action": "waitForSelector", "selector": ".success-message" }` |
+| `screenshot` | `fullPage` (`boolean`, optional, default `false`) | `{ "action": "screenshot", "fullPage": true }` |
+| `waitForDownload` | none | `{ "action": "waitForDownload" }` |
+| `evaluate` | `script` (`string`, required) | `{ "action": "evaluate", "script": "document.title" }` |
+
 ## Example 1: Simple Screenshot
 
 Takes a screenshot of a webpage.
